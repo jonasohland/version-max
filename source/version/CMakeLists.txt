@@ -24,3 +24,7 @@ include(${C74_MIN_API_DIR}/script/min-posttarget.cmake)
 liboh_setup(${PROJECT_NAME})
 
 version_tag(${PROJECT_NAME})
+
+if(${MSVC})
+    target_compile_options(${PROJECT_NAME} PUBLIC "/wd4244")
+endif()
