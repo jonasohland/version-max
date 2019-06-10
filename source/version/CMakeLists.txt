@@ -12,6 +12,13 @@ add_library(
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${C74_INCLUDES})
 
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)	
+
+find_package(Boost REQUIRED COMPONENTS filesystem)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC Boost::filesystem)
+
 include(${C74_MIN_API_DIR}/script/min-posttarget.cmake)
 
 liboh_setup(${PROJECT_NAME})

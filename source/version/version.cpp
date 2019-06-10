@@ -22,8 +22,10 @@ namespace o {
                 this->maxobj(), c74::max::gensym("#P"), &my_patcher);
 
             if (e) {
-                cerr << "Could not get current pather address"
+                cerr << "Could not get current patcher address"
                      << c74::min::endl;
+                
+                out.send("ERR_INTERNAL");
                 return args;
             }
 
@@ -36,7 +38,7 @@ namespace o {
                 cerr << "You must save the patcher to a git repository to get "
                         "a version tag"
                      << c74::min::endl;
-                out.send("ERROR");
+                out.send("ERR_NO_PATCHER");
                 return args;
             }
 
@@ -49,27 +51,42 @@ namespace o {
                 boost::algorithm::find_last(fixed_path, "/").begin());
 
             std::stringstream command;
-
-            command << "git -C \"" << fixed_path << "\" describe --tags";
-
-            boost::process::ipstream input;
-
-            boost::process::child ch{
-                command.str(), boost::process::std_out > input};
-
-            std::string line;
             
-            if(ch.joinable())
-                ch.join();
+            auto git = boost::process::search_path("git");
             
-            if(ch.exit_code()){
-                cerr << "Could not get version tag from git, code: " << ch.exit_code() << c74::min::endl;
-                out.send("ERROR");
+            if(git.empty()){
+                cerr << "Could not find git on this machine" << c74::min::endl;
+                out.send("ERR_GIT_NOT_FOUND");
                 return args;
             }
+
+            command << git << " -C \"" << fixed_path << "\" describe --tags";
+            
+            try {
+
+                boost::process::ipstream input;
+
+                boost::process::child ch{
+                    command.str(), boost::process::std_out > input};
+
+                std::string line;
                 
-            while (input && std::getline(input, line) && !line.empty())
-                out.send(line);
+                if(ch.joinable())
+                    ch.join();
+                
+                if(ch.exit_code()){
+                    cerr << "Could not get version tag from git, code: " << ch.exit_code() << c74::min::endl;
+                    out.send("ERR_NO_VERSION_TAG");
+                    return args;
+                }
+                
+                while (input && std::getline(input, line) && !line.empty())
+                    out.send(line);
+                
+            } catch (boost::process::process_error err){
+                cerr << "Failed to execute git: " << err.what() << c74::min::endl;
+                out.send("ERR_EXEC");
+            }
             
             return args;
         }
