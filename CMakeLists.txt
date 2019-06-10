@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.4)
 
+project(version-max-external)
+
 if (${CMAKE_GENERATOR} MATCHES "Xcode")
  		if (${XCODE_VERSION} VERSION_LESS 9)
   			message(STATUS "Xcode 9 or higher is required. Please install from the Mac App Store.")
