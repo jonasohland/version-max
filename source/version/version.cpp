@@ -16,7 +16,7 @@ namespace o {
 
         c74::min::atoms get_version(c74::min::atoms args, int inlet) {
 
-            c74::max::t_object* my_patcher;
+            c74::max::t_object *my_patcher, *my_parent;
 
             c74::max::t_max_err e = c74::max::object_obex_lookup(
                 this->maxobj(), c74::max::gensym("#P"), &my_patcher);
@@ -28,6 +28,18 @@ namespace o {
                 out.send("ERR_INTERNAL");
                 return args;
             }
+            
+            my_parent = my_patcher;
+            
+            do {
+                
+                my_parent = c74::max::jpatcher_get_parentpatcher(my_parent);
+                
+                if(my_parent != NULL)
+                    my_patcher = my_parent;
+                
+            } while(my_parent != NULL);
+
 
             c74::min::symbol path = c74::max::object_attr_getsym(
                 my_patcher, c74::max::gensym("filepath"));
